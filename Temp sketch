@@ -1,0 +1,83 @@
+/*--------------------------------------------------------------
+  Program:     LCD_temperature
+
+  Description:  Reads the voltage from a MCP9700 temperature 
+                sensor on pin A0 of the Arduino. Converts the
+                voltage to a temperature and displays it on an
+                LCD (16 character by two line).
+  Date:         15 April 2012
+  Author:       W.A. Smith, http://startingelectronics.org
+  
+  Adaptation:  Brian Gaude (aka AtomicGecko)
+  Date:         19 September 2015
+  Description:  Adapted W.A. Smith's code to read the voltage
+                from a TMP36 temperature sensor on pin A0 of the
+                Arduino. Converts the voltage to a temperature
+                and displays it on an LCD (16 character by two
+                line).  Added code to convert to Fahrenheit.  
+                Added code to display a temp setpoint on the LCD.
+                Added code to adjust setpoint with buttons.
+                Added code to compare setpoint value temp and
+                turn on LED if below set point value. This 
+                simulates activating an SSR to control a heating
+                element which would control temperature.
+--------------------------------------------------------------*/
+#include <LiquidCrystal.h>
+
+// Arduino pins used for LCD
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+const int buttonupPin = 9;     // the number of the pushbutton up pin
+const int buttondnPin = 8;     // the number of the pushbutton down pin
+int buttonupState = 0;         // variable for reading the up pushbutton status
+int buttondnState = 0;         // variable for reading the down pushbutton status
+float setpoint = 77.0;      // temperature setpoint default
+
+void setup() {
+    // initialize the LCD display
+    lcd.begin(16, 2);
+    pinMode(13, OUTPUT);
+    // initialize the pushbutton pins as an input:
+    pinMode(buttonupPin, INPUT);
+    pinMode(buttondnPin, INPUT);
+
+}
+void loop() {
+    float temperature = 0.0;   // stores the calculated temperature
+    float temperaturef = 0.0;  //temperature in Fahrenheit
+  
+   // read the state of the up pushbutton value:
+  buttonupState = digitalRead(buttonupPin);
+  // check if the up pushbutton is pressed.
+  // if it is, the buttonupState is HIGH:
+  if (buttonupState == HIGH) {
+    // add +1 to setpoint:
+  setpoint = setpoint + 1;
+  }
+   // read the state of the down pushbutton value:
+  buttondnState = digitalRead(buttondnPin);
+  // check if the down pushbutton is pressed.
+  // if it is, the buttonupState is HIGH:
+  if (buttondnState == HIGH) {
+    // subtract -1 to setpoint:
+    setpoint = setpoint - 1;
+  }
+     // convert A0 value to temperature
+        temperature = ((float)analogRead(A0) * 5.0 / 1024.0) - 0.5;
+        temperature = temperature / 0.01;
+        // convert to Fahrenheit T(°F) = T(°C) × 9/5 + 32
+        temperaturef = ((temperature * 9)/5) + 32;
+        
+      // check temp. if below 50F turn on LED if below 50F turn on LED
+      if (temperaturef < setpoint) digitalWrite(13, HIGH); 
+    else digitalWrite(13, LOW);      
+   
+    // display the temperature on the LCD
+    lcd.setCursor(0, 0);
+    lcd.print(temperaturef);
+    lcd.print(" deg. F");
+    lcd.setCursor(0, 1);
+    lcd.print("Setpoit = ");
+    lcd.print(setpoint);
+        
+}
